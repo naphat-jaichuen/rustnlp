@@ -11,8 +11,9 @@ use tower_http::cors::CorsLayer;
 use tracing::{info, warn};
 use uuid::Uuid;
 
-mod nlp;
 mod callbacks;
+mod nlp;
+mod udp_broadcast;
 
 use nlp::NlpProcessor;
 
@@ -66,6 +67,28 @@ async fn main() -> anyhow::Result<()> {
     let state = AppState { nlp_processor };
     let app = create_app(state);
 
+    // Start UDP broadcast in another thread
+    let server_port = 3000;
+    let service_name = "rustlm-service";
+    let shared_key = "SECRETKEY123";
+
+    // Choose announcement mode:
+    // - Periodic: announces every N seconds continuously
+    // - OnRequest: only responds to discovery requests (no periodic announcements)
+    // - Limited: announces N times then stops
+    //let announcement_mode = udp_broadcast::AnnouncementMode::Periodic(30); // Default: every 30 seconds
+    let announcement_mode = udp_broadcast::AnnouncementMode::OnRequest; // Response-only mode
+    // let announcement_mode = udp_broadcast::AnnouncementMode::Limited(10, 5); // 5 announcements every 10 seconds
+
+    std::thread::spawn(move || {
+        udp_broadcast::start_discovery_service(
+            server_port,
+            service_name,
+            shared_key,
+            announcement_mode,
+        );
+    });
+
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
     info!("Server starting on http://0.0.0.0:3000");
 
@@ -103,7 +126,7 @@ async fn process_text(
     {
         Ok((result, confidence)) => {
             let processing_time = start_time.elapsed();
-            
+
             info!(
                 "Request {} completed in {}ms",
                 request_id,
@@ -158,9 +181,7 @@ async fn process_text_with_task(
     process_text(State(state), Json(request)).await
 }
 
-async fn list_available_models(
-    State(state): State<AppState>,
-) -> Json<serde_json::Value> {
+async fn list_available_models(State(state): State<AppState>) -> Json<serde_json::Value> {
     let models = state.nlp_processor.list_available_tasks();
     Json(serde_json::json!({
         "available_tasks": models,
@@ -171,7 +192,7 @@ async fn list_available_models(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use axum::body::{Body, to_bytes};
+    use axum::body::{to_bytes, Body};
     use axum::http::Request;
     use tower::ServiceExt; // for `oneshot`
 
@@ -182,7 +203,12 @@ mod tests {
         let app = create_app(state);
 
         let response = app
-            .oneshot(Request::builder().uri("/health").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/health")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
 
@@ -253,7 +279,12 @@ mod tests {
         let app = create_app(state);
 
         let response = app
-            .oneshot(Request::builder().uri("/models").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/models")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
 

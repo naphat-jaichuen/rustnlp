@@ -11,6 +11,7 @@ A Rust-based REST API server with Natural Language Processing capabilities.
 - **CORS Support**: Cross-origin resource sharing enabled
 - **Logging**: Structured logging with tracing
 - **Error Handling**: Comprehensive error responses
+- **UDP Broadcast Discovery**: Automatic server discovery with shared key validation
 
 ## Quick Start
 
@@ -32,7 +33,7 @@ cargo build --release
 cargo run
 ```
 
-The server will start on `http://localhost:3000`
+The server will start on `http://localhost:3000` and automatically begin broadcasting its availability via UDP.
 
 ## API Endpoints
 
@@ -389,6 +390,62 @@ src/
 
 Cargo.toml           # Dependencies and project config
 README.md           # This file
+```
+
+## UDP Server Discovery
+
+The server automatically broadcasts its availability via UDP on port 8888. This allows client applications to discover running servers on the local network.
+
+### Server Broadcast
+The server sends a JSON message every 30 seconds:
+```json
+{
+  "service": "rustlm-service",
+  "ip": "192.168.1.100",
+  "port": 3000,
+  "key": "SECRETKEY123"
+}
+```
+
+### Client Discovery
+
+**Passive Discovery** (listens for periodic announcements):
+```bash
+# Run the client discovery example
+cargo run --example client_discovery
+```
+
+**Active Discovery** (sends discovery requests):
+```bash
+# Send discovery request and wait for responses
+cargo run --example client_request_discovery
+```
+
+Both clients will validate the shared key and only accept servers with the correct key.
+
+### Announcement Modes
+
+You can configure how the server announces itself in `src/main.rs`:
+
+**1. Periodic Mode (Default)**: Announces every N seconds continuously
+```rust
+let announcement_mode = udp_broadcast::AnnouncementMode::Periodic(30); // Every 30 seconds
+```
+
+**2. On-Request Mode**: Only responds when clients send discovery requests (no periodic announcements)
+```rust
+let announcement_mode = udp_broadcast::AnnouncementMode::OnRequest;
+```
+
+**3. Limited Mode**: Announces N times then stops
+```rust
+let announcement_mode = udp_broadcast::AnnouncementMode::Limited(10, 5); // 5 announcements every 10 seconds
+```
+
+### Key Configuration
+The shared key is defined in `src/main.rs`. Both server and client must use the same key:
+```rust
+let shared_key = "SECRETKEY123"; // Change this to your own key
 ```
 
 ## Configuration

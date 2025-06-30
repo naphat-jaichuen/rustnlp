@@ -152,8 +152,14 @@ curl -s -X POST "$BASE_URL/process/google_search" \
   -d '{"text": "rust programming language tutorial"}' | jq '.'
 echo -e "\n"
 
+echo "23. Testing Ask AI Command..."
+curl -s -X POST "$BASE_URL/process/ask_ai" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "What is the best way to learn Rust programming?"}' | jq '.'
+echo -e "\n"
+
 echo "✅ API Testing Complete!"
-echo "📋 Total Tests: 22 (12 original + 10 system commands)"
+echo "📋 Total Tests: 23 (12 original + 11 system commands)"
 
 # Kill server if started in background
 # if [ ! -z "$SERVER_PID" ]; then

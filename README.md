@@ -298,6 +298,47 @@ curl -X POST http://localhost:3000/process/google_search \
 }
 ```
 
+#### 17. Ask AI (Azure OpenAI)
+Sends questions to Azure OpenAI and returns AI-generated responses.
+
+**Task**: `ask_ai`
+
+**Setup Required**:
+Set these environment variables before using:
+```bash
+export AZURE_OPENAI_ENDPOINT="https://your-resource.openai.azure.com"
+export AZURE_OPENAI_API_KEY="your-api-key"
+export AZURE_OPENAI_DEPLOYMENT="gpt-35-turbo"
+```
+
+**Example**:
+```bash
+curl -X POST http://localhost:3000/process/ask_ai \
+  -H "Content-Type: application/json" \
+  -d '{"text": "What is the best way to learn Rust programming?"}'
+```
+
+**Response (Setup Required)**:
+```json
+{
+  "command": "ask_ai",
+  "question": "What is the best way to learn Rust programming?",
+  "status": "setup_required",
+  "message": "To use Azure OpenAI, set these environment variables...",
+  "curl_example": "curl -X POST 'https://your-resource.openai.azure.com'/openai/deployments/gpt-35-turbo/chat/completions?api-version=2024-02-15-preview -H 'Content-Type: application/json' -H 'api-key: YOUR_API_KEY' -d '{\"messages\": [{\"role\": \"user\", \"content\": \"What is the best way to learn Rust programming?\"}], \"max_tokens\": 1000}'"
+}
+```
+
+**Response (With Azure Setup)**:
+```json
+{
+  "command": "ask_ai",
+  "question": "What is the best way to learn Rust programming?",
+  "answer": "The best way to learn Rust programming is to start with the official Rust Book...",
+  "source": "azure_openai"
+}
+```
+
 ## Response Format
 
 All successful responses follow this format:

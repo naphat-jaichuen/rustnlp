@@ -32,6 +32,7 @@ impl NlpProcessor {
             "checkout".to_string(),
             "diff".to_string(),
             "google_search".to_string(),
+            "ask_ai".to_string(),
         ];
 
         info!("Available NLP tasks: {:?}", available_tasks);
@@ -63,6 +64,7 @@ impl NlpProcessor {
             "checkout" => self.handle_checkout(text).await,
             "diff" => self.handle_diff(text).await,
             "google_search" => self.handle_google_search(text).await,
+            "ask_ai" => self.handle_ask_ai(text).await,
             _ => Err(anyhow!("Unsupported task: {}", task)),
         }
     }
@@ -490,6 +492,104 @@ impl NlpProcessor {
         
         Ok((result, Some(0.9)))
     }
+
+    /// Handle Ask AI command - sends request to Azure OpenAI
+    async fn handle_ask_ai(&self, text: &str) -> Result<(String, Option<f32>)> {
+        info!("Processing Ask AI command: {}", text);
+        
+        let question = text.trim();
+        if question.is_empty() {
+            return Ok((format!("{{\"command\": \"ask_ai\", \"error\": \"Question required\", \"usage\": \"ask_ai <your_question>\"}}"), Some(0.9)));
+        }
+        
+        // Check for Azure OpenAI environment variables
+        let azure_endpoint = std::env::var("AZURE_OPENAI_ENDPOINT")
+            .unwrap_or_else(|_| "https://your-resource.openai.azure.com".to_string());
+        let azure_api_key = std::env::var("AZURE_OPENAI_API_KEY")
+            .unwrap_or_else(|_| "your-api-key-here".to_string());
+        let deployment_name = std::env::var("AZURE_OPENAI_DEPLOYMENT")
+            .unwrap_or_else(|_| "gpt-35-turbo".to_string());
+        
+        // If using default values, provide setup instructions
+        if azure_api_key == "your-api-key-here" {
+            let setup_instructions = "To use Azure OpenAI, set these environment variables:\nexport AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com\nexport AZURE_OPENAI_API_KEY=your-api-key\nexport AZURE_OPENAI_DEPLOYMENT=gpt-35-turbo".to_string();
+            
+            let result = format!(
+                "{{\"command\": \"ask_ai\", \"question\": \"{}\", \"status\": \"setup_required\", \"message\": \"{}\", \"curl_example\": \"curl -X POST '{}'/openai/deployments/{}/chat/completions?api-version=2024-02-15-preview -H 'Content-Type: application/json' -H 'api-key: YOUR_API_KEY' -d '{{\\\"messages\\\": [{{\\\"role\\\": \\\"user\\\", \\\"content\\\": \\\"{}\\\"}}], \\\"max_tokens\\\": 1000}}'\"}}",
+                question, setup_instructions, azure_endpoint, deployment_name, question
+            );
+            
+            return Ok((result, Some(0.8)));
+        }
+        
+        // Attempt to make the actual Azure OpenAI request
+        match self.make_azure_openai_request(question, &azure_endpoint, &azure_api_key, &deployment_name).await {
+            Ok(response) => {
+                let result = format!(
+                    "{{\"command\": \"ask_ai\", \"question\": \"{}\", \"answer\": \"{}\", \"source\": \"azure_openai\"}}",
+                    question, response
+                );
+                Ok((result, Some(0.95)))
+            }
+            Err(e) => {
+                let error_message = format!("Azure OpenAI request failed: {}", e);
+                let result = format!(
+                    "{{\"command\": \"ask_ai\", \"question\": \"{}\", \"error\": \"{}\", \"suggestion\": \"Check your Azure OpenAI credentials and endpoint\"}}",
+                    question, error_message
+                );
+                Ok((result, Some(0.7)))
+            }
+        }
+    }
+    
+    /// Make actual request to Azure OpenAI
+    async fn make_azure_openai_request(
+        &self,
+        question: &str,
+        endpoint: &str,
+        api_key: &str,
+        deployment: &str,
+    ) -> Result<String> {
+        let client = reqwest::Client::new();
+        
+        let url = format!(
+            "{}/openai/deployments/{}/chat/completions?api-version=2024-02-15-preview",
+            endpoint, deployment
+        );
+        
+        let request_body = serde_json::json!({
+            "messages": [
+                {
+                    "role": "user",
+                    "content": question
+                }
+            ],
+            "max_tokens": 1000,
+            "temperature": 0.7
+        });
+        
+        let response = client
+            .post(&url)
+            .header("Content-Type", "application/json")
+            .header("api-key", api_key)
+            .json(&request_body)
+            .send()
+            .await?
+            .json::<serde_json::Value>()
+            .await?;
+        
+        // Extract the response content
+        if let Some(choices) = response["choices"].as_array() {
+            if let Some(first_choice) = choices.get(0) {
+                if let Some(content) = first_choice["message"]["content"].as_str() {
+                    return Ok(content.to_string());
+                }
+            }
+        }
+        
+        // If we can't parse the response, return the raw response
+        Ok(format!("Raw response: {}", response))
+    }
 }
 
 #[cfg(test)]
@@ -501,7 +601,7 @@ mod tests {
         let processor = NlpProcessor::new().await.unwrap();
         let tasks = processor.list_available_tasks();
         
-        assert_eq!(tasks.len(), 16);
+        assert_eq!(tasks.len(), 17);
         assert!(tasks.contains(&"sentiment".to_string()));
         assert!(tasks.contains(&"summarize".to_string()));
         assert!(tasks.contains(&"classify".to_string()));
@@ -764,5 +864,21 @@ mod tests {
         assert!(result.contains("open"));
         assert!(confidence.is_some());
         assert_eq!(confidence.unwrap(), 0.9);
+    }
+
+    #[tokio::test]
+    async fn test_ask_ai_command() {
+        let processor = NlpProcessor::new().await.unwrap();
+        let (result, confidence) = processor
+            .handle_ask_ai("What is the meaning of life?")
+            .await
+            .unwrap();
+        
+        assert!(result.contains("ask_ai"));
+        assert!(result.contains("What is the meaning of life?"));
+        // Should contain setup instructions since Azure keys aren't configured
+        assert!(result.contains("setup_required") || result.contains("AZURE_OPENAI"));
+        assert!(confidence.is_some());
+        assert!(confidence.unwrap() >= 0.7);
     }
 }

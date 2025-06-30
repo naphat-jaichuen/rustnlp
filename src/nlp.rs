@@ -644,7 +644,7 @@ impl NlpProcessor {
         Ok(format!("Raw response: {}", response))
     }
 
-    /// Handle natural language command - parses intent and entities
+    /// Handle natural language command - parses intent and automatically executes the appropriate task
     async fn handle_natural_language(&self, text: &str) -> Result<(String, Option<f32>)> {
         info!("Processing natural language command: {}", text);
         
@@ -653,53 +653,242 @@ impl NlpProcessor {
             return Ok((format!("{{\"command\": \"natural_language\", \"error\": \"Input text required\", \"usage\": \"natural_language <your natural language command>\"}}"), Some(0.9)));
         }
         
-        // Simple intent parsing - look for common patterns
+        // Parse intent and extract entities
+        let (intent, extracted_text, confidence) = self.parse_intent_and_extract(input).await;
+        
+        // Auto-execute the identified task
+        match intent.as_str() {
+            "install" => {
+                let (result, task_confidence) = self.handle_install(&extracted_text).await?;
+                let final_result = format!(
+                    "{{\"intent\": \"install\", \"confidence\": {:.2}, \"extracted_text\": \"{}\", \"result\": {}, \"auto_executed\": true}}",
+                    confidence, extracted_text, result
+                );
+                Ok((final_result, task_confidence))
+            },
+            "find_file" => {
+                let (result, task_confidence) = self.handle_find_file(&extracted_text).await?;
+                let final_result = format!(
+                    "{{\"intent\": \"find_file\", \"confidence\": {:.2}, \"extracted_text\": \"{}\", \"result\": {}, \"auto_executed\": true}}",
+                    confidence, extracted_text, result
+                );
+                Ok((final_result, task_confidence))
+            },
+            "find_content" => {
+                let (result, task_confidence) = self.handle_find_content(&extracted_text).await?;
+                let final_result = format!(
+                    "{{\"intent\": \"find_content\", \"confidence\": {:.2}, \"extracted_text\": \"{}\", \"result\": {}, \"auto_executed\": true}}",
+                    confidence, extracted_text, result
+                );
+                Ok((final_result, task_confidence))
+            },
+            "get_file_from" => {
+                let (result, task_confidence) = self.handle_get_file_from(&extracted_text).await?;
+                let final_result = format!(
+                    "{{\"intent\": \"get_file_from\", \"confidence\": {:.2}, \"extracted_text\": \"{}\", \"result\": {}, \"auto_executed\": true}}",
+                    confidence, extracted_text, result
+                );
+                Ok((final_result, task_confidence))
+            },
+            "show_tools" => {
+                let (result, task_confidence) = self.handle_show_tools(&extracted_text).await?;
+                let final_result = format!(
+                    "{{\"intent\": \"show_tools\", \"confidence\": {:.2}, \"extracted_text\": \"{}\", \"result\": {}, \"auto_executed\": true}}",
+                    confidence, extracted_text, result
+                );
+                Ok((final_result, task_confidence))
+            },
+            "open_app" => {
+                let (result, task_confidence) = self.handle_open_app(&extracted_text).await?;
+                let final_result = format!(
+                    "{{\"intent\": \"open_app\", \"confidence\": {:.2}, \"extracted_text\": \"{}\", \"result\": {}, \"auto_executed\": true}}",
+                    confidence, extracted_text, result
+                );
+                Ok((final_result, task_confidence))
+            },
+            "open_file" => {
+                let (result, task_confidence) = self.handle_open_file(&extracted_text).await?;
+                let final_result = format!(
+                    "{{\"intent\": \"open_file\", \"confidence\": {:.2}, \"extracted_text\": \"{}\", \"result\": {}, \"auto_executed\": true}}",
+                    confidence, extracted_text, result
+                );
+                Ok((final_result, task_confidence))
+            },
+            "checkout" => {
+                let (result, task_confidence) = self.handle_checkout(&extracted_text).await?;
+                let final_result = format!(
+                    "{{\"intent\": \"checkout\", \"confidence\": {:.2}, \"extracted_text\": \"{}\", \"result\": {}, \"auto_executed\": true}}",
+                    confidence, extracted_text, result
+                );
+                Ok((final_result, task_confidence))
+            },
+            "diff" => {
+                let (result, task_confidence) = self.handle_diff(&extracted_text).await?;
+                let final_result = format!(
+                    "{{\"intent\": \"diff\", \"confidence\": {:.2}, \"extracted_text\": \"{}\", \"result\": {}, \"auto_executed\": true}}",
+                    confidence, extracted_text, result
+                );
+                Ok((final_result, task_confidence))
+            },
+            "google_search" => {
+                let (result, task_confidence) = self.handle_google_search(&extracted_text).await?;
+                let final_result = format!(
+                    "{{\"intent\": \"google_search\", \"confidence\": {:.2}, \"extracted_text\": \"{}\", \"result\": {}, \"auto_executed\": true}}",
+                    confidence, extracted_text, result
+                );
+                Ok((final_result, task_confidence))
+            },
+            "ask_ai" => {
+                let (result, task_confidence) = self.handle_ask_ai(&extracted_text).await?;
+                let final_result = format!(
+                    "{{\"intent\": \"ask_ai\", \"confidence\": {:.2}, \"extracted_text\": \"{}\", \"result\": {}, \"auto_executed\": true}}",
+                    confidence, extracted_text, result
+                );
+                Ok((final_result, task_confidence))
+            },
+            "sentiment" => {
+                let (result, task_confidence) = self.analyze_sentiment(&extracted_text).await?;
+                let final_result = format!(
+                    "{{\"intent\": \"sentiment\", \"confidence\": {:.2}, \"extracted_text\": \"{}\", \"result\": {}, \"auto_executed\": true}}",
+                    confidence, extracted_text, result
+                );
+                Ok((final_result, task_confidence))
+            },
+            "summarize" => {
+                let (result, task_confidence) = self.summarize_text(&extracted_text).await?;
+                let final_result = format!(
+                    "{{\"intent\": \"summarize\", \"confidence\": {:.2}, \"extracted_text\": \"{}\", \"result\": {}, \"auto_executed\": true}}",
+                    confidence, extracted_text, result
+                );
+                Ok((final_result, task_confidence))
+            },
+            "classify" => {
+                let (result, task_confidence) = self.classify_text(&extracted_text).await?;
+                let final_result = format!(
+                    "{{\"intent\": \"classify\", \"confidence\": {:.2}, \"extracted_text\": \"{}\", \"result\": {}, \"auto_executed\": true}}",
+                    confidence, extracted_text, result
+                );
+                Ok((final_result, task_confidence))
+            },
+            "extract_keywords" => {
+                let (result, task_confidence) = self.extract_keywords(&extracted_text).await?;
+                let final_result = format!(
+                    "{{\"intent\": \"extract_keywords\", \"confidence\": {:.2}, \"extracted_text\": \"{}\", \"result\": {}, \"auto_executed\": true}}",
+                    confidence, extracted_text, result
+                );
+                Ok((final_result, task_confidence))
+            },
+            "translate" => {
+                let (result, task_confidence) = self.translate_text(&extracted_text).await?;
+                let final_result = format!(
+                    "{{\"intent\": \"translate\", \"confidence\": {:.2}, \"extracted_text\": \"{}\", \"result\": {}, \"auto_executed\": true}}",
+                    confidence, extracted_text, result
+                );
+                Ok((final_result, task_confidence))
+            },
+            "question_answer" => {
+                let (result, task_confidence) = self.answer_question(&extracted_text).await?;
+                let final_result = format!(
+                    "{{\"intent\": \"question_answer\", \"confidence\": {:.2}, \"extracted_text\": \"{}\", \"result\": {}, \"auto_executed\": true}}",
+                    confidence, extracted_text, result
+                );
+                Ok((final_result, task_confidence))
+            },
+            "unknown" => {
+                let result = format!(
+                    "{{\"intent\": \"unknown\", \"confidence\": {:.2}, \"message\": \"I couldn't understand your request. Could you please rephrase it or use a more specific command?\", \"suggestions\": [\"install package\", \"find file\", \"search content\", \"open app\", \"checkout branch\", \"analyze sentiment\", \"summarize text\"], \"auto_executed\": false}}",
+                    confidence
+                );
+                Ok((result, Some(confidence)))
+            },
+            _ => {
+                let result = format!(
+                    "{{\"intent\": \"{}\", \"confidence\": {:.2}, \"message\": \"Intent recognized but handler not implemented\", \"suggested_task\": \"{}\", \"auto_executed\": false}}",
+                    intent, confidence, intent
+                );
+                Ok((result, Some(confidence)))
+            }
+        }
+    }
+    
+    /// Parse intent from natural language input and extract relevant text
+    async fn parse_intent_and_extract(&self, input: &str) -> (String, String, f32) {
         let input_lower = input.to_lowercase();
         
-        let (intent, entities, confidence) = if input_lower.contains("open") && input_lower.contains("file") {
-            if input_lower.contains("svn") || input_lower.contains("repository") {
-                ("open_file_from_repo", vec![("repository_type", "svn")], 0.8)
-            } else {
-                ("open_file", vec![], 0.7)
-            }
+        // Enhanced intent parsing with entity extraction
+        if input_lower.contains("install") {
+            let extracted = self.extract_after_keyword(input, &["install", "setup", "add"]);
+            ("install".to_string(), extracted, 0.85)
         } else if input_lower.contains("find") && input_lower.contains("file") {
-            ("find_file", vec![], 0.8)
-        } else if input_lower.contains("search") || input_lower.contains("find") {
-            if input_lower.contains("content") {
-                ("find_content", vec![], 0.8)
-            } else {
-                ("search", vec![], 0.7)
-            }
-        } else if input_lower.contains("install") {
-            ("install", vec![], 0.8)
-        } else if input_lower.contains("checkout") || input_lower.contains("switch branch") {
-            ("checkout", vec![], 0.8)
+            let extracted = self.extract_after_keyword(input, &["find", "locate", "search for"]);
+            ("find_file".to_string(), extracted, 0.85)
+        } else if (input_lower.contains("find") || input_lower.contains("search")) && input_lower.contains("content") {
+            let extracted = self.extract_after_keyword(input, &["find", "search", "grep"]);
+            ("find_content".to_string(), extracted, 0.85)
+        } else if input_lower.contains("download") || input_lower.contains("get") {
+            let extracted = self.extract_after_keyword(input, &["download", "get", "fetch"]);
+            ("get_file_from".to_string(), extracted, 0.80)
+        } else if input_lower.contains("show") && input_lower.contains("tool") {
+            let extracted = self.extract_after_keyword(input, &["show", "list", "tools"]);
+            ("show_tools".to_string(), extracted, 0.85)
+        } else if input_lower.contains("open") && input_lower.contains("app") {
+            let extracted = self.extract_after_keyword(input, &["open", "launch", "start"]);
+            ("open_app".to_string(), extracted, 0.85)
+        } else if input_lower.contains("open") && input_lower.contains("file") {
+            let extracted = self.extract_after_keyword(input, &["open", "edit", "view"]);
+            ("open_file".to_string(), extracted, 0.85)
+        } else if input_lower.contains("checkout") || input_lower.contains("switch") {
+            let extracted = self.extract_after_keyword(input, &["checkout", "switch", "branch"]);
+            ("checkout".to_string(), extracted, 0.85)
         } else if input_lower.contains("diff") || input_lower.contains("compare") {
-            ("diff", vec![], 0.8)
-        } else if input_lower.contains("what") || input_lower.contains("how") || input_lower.contains("why") {
-            ("question", vec![], 0.7)
+            let extracted = self.extract_after_keyword(input, &["diff", "compare", "changes"]);
+            ("diff".to_string(), extracted, 0.85)
+        } else if input_lower.contains("search") || input_lower.contains("google") {
+            let extracted = self.extract_after_keyword(input, &["search", "google", "look up"]);
+            ("google_search".to_string(), extracted, 0.80)
+        } else if input_lower.contains("ask") || input_lower.contains("question") {
+            let extracted = self.extract_after_keyword(input, &["ask", "question", "what", "how", "why"]);
+            ("ask_ai".to_string(), extracted, 0.75)
+        } else if input_lower.contains("sentiment") || input_lower.contains("feeling") || input_lower.contains("mood") {
+            let extracted = self.extract_after_keyword(input, &["sentiment", "analyze", "feeling"]);
+            ("sentiment".to_string(), extracted, 0.85)
+        } else if input_lower.contains("summary") || input_lower.contains("summarize") {
+            let extracted = self.extract_after_keyword(input, &["summarize", "summary", "tldr"]);
+            ("summarize".to_string(), extracted, 0.85)
+        } else if input_lower.contains("classify") || input_lower.contains("category") {
+            let extracted = self.extract_after_keyword(input, &["classify", "categorize", "type"]);
+            ("classify".to_string(), extracted, 0.85)
+        } else if input_lower.contains("keyword") || input_lower.contains("extract") {
+            let extracted = self.extract_after_keyword(input, &["extract", "keywords", "key terms"]);
+            ("extract_keywords".to_string(), extracted, 0.85)
+        } else if input_lower.contains("translate") {
+            let extracted = self.extract_after_keyword(input, &["translate", "translation"]);
+            ("translate".to_string(), extracted, 0.80)
+        } else if input_lower.contains("answer") || input_lower.contains("what") || input_lower.contains("how") {
+            ("question_answer".to_string(), input.to_string(), 0.70)
         } else {
-            ("unknown", vec![], 0.3)
-        };
+            ("unknown".to_string(), input.to_string(), 0.30)
+        }
+    }
+    
+    /// Extract text after specific keywords
+    fn extract_after_keyword(&self, input: &str, keywords: &[&str]) -> String {
+        let input_lower = input.to_lowercase();
         
-        let result = if intent == "open_file_from_repo" {
-            format!(
-                "{{\"intent\": \"{}\", \"entities\": {:?}, \"confidence\": {:.2}, \"next_action\": \"clarify_repository\", \"question\": \"Which repository would you like to open the file from? Please specify the repository name or path.\"}}",
-                intent, entities, confidence
-            )
-        } else if intent == "unknown" {
-            format!(
-                "{{\"intent\": \"{}\", \"entities\": [], \"confidence\": {:.2}, \"message\": \"I couldn't understand your request. Could you please rephrase it or use a more specific command?\", \"suggestions\": [\"open file\", \"find file\", \"search content\", \"install package\"]}}",
-                intent, confidence
-            )
-        } else {
-            format!(
-                "{{\"intent\": \"{}\", \"entities\": {:?}, \"confidence\": {:.2}, \"message\": \"Intent recognized successfully\", \"suggested_task\": \"{}\"}}",
-                intent, entities, confidence, intent
-            )
-        };
+        for keyword in keywords {
+            if let Some(pos) = input_lower.find(keyword) {
+                let start_pos = pos + keyword.len();
+                if start_pos < input.len() {
+                    let extracted = input[start_pos..].trim();
+                    if !extracted.is_empty() {
+                        return extracted.to_string();
+                    }
+                }
+            }
+        }
         
-        Ok((result, Some(confidence)))
+        // If no specific extraction, return the whole input
+        input.to_string()
     }
 }
 

@@ -86,7 +86,7 @@ rustlm-server/
 │       ├── sentiment_handler.rs
 │       └── ... (15 more handlers)
 ├── target/release/              # Compiled executables
-├── doc/                         # Documentation
+├── docs/                        # Documentation
 ├── build_handlers.sh            # Build script
 ├── generate_handlers.sh         # Code generation script
 └── test_handlers.sh            # Test script
@@ -465,5 +465,5 @@ For more detailed information, see the individual documentation files in this fo
 - [Installation Guide](installation.md)
 - [Usage Examples](examples.md)
 - [Development Guide](development.md)
-- [API Reference](api.md)
+- [API Reference](api-reference.md)
 - [Troubleshooting](troubleshooting.md)

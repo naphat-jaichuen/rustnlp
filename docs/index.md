@@ -8,13 +8,13 @@ This documentation is organized into several guides, each focusing on different 
 
 ### 🚀 Getting Started
 
-- **[Main README](README.md)** - Complete overview and quick start guide
+- **[Main README](readme.md)** - Complete overview and quick start guide
 - **[Installation Guide](installation.md)** - Detailed setup and build instructions
 - **[Usage Examples](examples.md)** - Comprehensive examples and use cases
 
 ### 🔧 Technical Reference
 
-- **[API Reference](api.md)** - Detailed API documentation and specifications
+- **[API Reference](api-reference.md)** - Detailed API documentation and specifications
 - **[Troubleshooting](troubleshooting.md)** - Common issues and solutions
 - **[Development Guide](development.md)** - How to extend and modify handlers
 
@@ -71,7 +71,7 @@ echo 'Long text...' | ./target/release/summarize-handler
 
 ### For New Users
 
-1. **Start with [README.md](README.md)** for an overview
+1. **Start with [readme.md](readme.md)** for an overview
 2. **Follow [Installation Guide](installation.md)** to set up
 3. **Explore [Usage Examples](examples.md)** for practical examples
 4. **Reference [Troubleshooting](troubleshooting.md)** if you encounter issues
@@ -79,12 +79,12 @@ echo 'Long text...' | ./target/release/summarize-handler
 ### For Developers
 
 1. **Read [Development Guide](development.md)** for contribution guidelines
-2. **Check [API Reference](api.md)** for technical specifications
+2. **Check [API Reference](api-reference.md)** for technical specifications
 3. **Use [Troubleshooting](troubleshooting.md)** for debugging
 
 ### For System Integrators
 
-1. **Review [API Reference](api.md)** for integration specifications
+1. **Review [API Reference](api-reference.md)** for integration specifications
 2. **Study [Usage Examples](examples.md)** for integration patterns
 3. **Consult [Troubleshooting](troubleshooting.md)** for deployment issues
 
@@ -142,11 +142,11 @@ The project is designed to be easily extensible. See the [Development Guide](dev
 | Task | Documentation |
 |------|---------------|
 | **Setting up the project** | [Installation Guide](installation.md) |
-| **Learning basic usage** | [README.md](README.md) + [Usage Examples](examples.md) |
-| **Integrating with other systems** | [API Reference](api.md) + [Usage Examples](examples.md) |
+| **Learning basic usage** | [readme.md](readme.md) + [Usage Examples](examples.md) |
+| **Integrating with other systems** | [API Reference](api-reference.md) + [Usage Examples](examples.md) |
 | **Troubleshooting problems** | [Troubleshooting](troubleshooting.md) |
 | **Extending functionality** | [Development Guide](development.md) |
-| **Understanding the API** | [API Reference](api.md) |
+| **Understanding the API** | [API Reference](api-reference.md) |
 
 ### By Role
 
@@ -161,7 +161,7 @@ The project is designed to be easily extensible. See the [Development Guide](dev
 
 1. **Check [Troubleshooting](troubleshooting.md)** for common issues
 2. **Review [Usage Examples](examples.md)** for similar use cases
-3. **Consult [API Reference](api.md)** for technical details
+3. **Consult [API Reference](api-reference.md)** for technical details
 4. **Search the project repository** for existing issues
 5. **Create a new issue** with debug information from [Troubleshooting](troubleshooting.md)
 

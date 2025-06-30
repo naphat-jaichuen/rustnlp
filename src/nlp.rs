@@ -31,6 +31,7 @@ impl NlpProcessor {
             "open_file".to_string(),
             "checkout".to_string(),
             "diff".to_string(),
+            "google_search".to_string(),
         ];
 
         info!("Available NLP tasks: {:?}", available_tasks);
@@ -61,6 +62,7 @@ impl NlpProcessor {
             "open_file" => self.handle_open_file(text).await,
             "checkout" => self.handle_checkout(text).await,
             "diff" => self.handle_diff(text).await,
+            "google_search" => self.handle_google_search(text).await,
             _ => Err(anyhow!("Unsupported task: {}", task)),
         }
     }
@@ -460,6 +462,34 @@ impl NlpProcessor {
         
         Ok((result, Some(0.9)))
     }
+
+    /// Handle Google search command
+    async fn handle_google_search(&self, text: &str) -> Result<(String, Option<f32>)> {
+        info!("Processing Google search command: {}", text);
+        
+        let query = text.trim();
+        if query.is_empty() {
+            return Ok((format!("{{\"command\": \"google_search\", \"error\": \"Search query required\", \"usage\": \"google_search <search_query>\"}}"), Some(0.9)));
+        }
+        
+        // URL encode the search query
+        let encoded_query = query.replace(" ", "+").replace("&", "%26").replace("?", "%3F");
+        let google_url = format!("https://www.google.com/search?q={}", encoded_query);
+        
+        let suggested_commands = vec![
+            format!("open '{}'", google_url),
+            format!("curl -s '{}' | grep -i title", google_url),
+            format!("python3 -m webbrowser '{}'", google_url),
+            format!("osascript -e \"open location \\\"{}\\\"\"", google_url),
+        ];
+        
+        let result = format!(
+            "{{\"command\": \"google_search\", \"query\": \"{}\", \"google_url\": \"{}\", \"suggested_commands\": {:?}}}",
+            query, google_url, suggested_commands
+        );
+        
+        Ok((result, Some(0.9)))
+    }
 }
 
 #[cfg(test)]
@@ -471,7 +501,7 @@ mod tests {
         let processor = NlpProcessor::new().await.unwrap();
         let tasks = processor.list_available_tasks();
         
-        assert_eq!(tasks.len(), 15);
+        assert_eq!(tasks.len(), 16);
         assert!(tasks.contains(&"sentiment".to_string()));
         assert!(tasks.contains(&"summarize".to_string()));
         assert!(tasks.contains(&"classify".to_string()));
@@ -716,6 +746,22 @@ mod tests {
         
         assert!(result.contains("diff"));
         assert!(result.contains("git diff"));
+        assert!(confidence.is_some());
+        assert_eq!(confidence.unwrap(), 0.9);
+    }
+
+    #[tokio::test]
+    async fn test_google_search_command() {
+        let processor = NlpProcessor::new().await.unwrap();
+        let (result, confidence) = processor
+            .handle_google_search("rust programming language")
+            .await
+            .unwrap();
+        
+        assert!(result.contains("google_search"));
+        assert!(result.contains("rust programming language"));
+        assert!(result.contains("https://www.google.com/search?q=rust+programming+language"));
+        assert!(result.contains("open"));
         assert!(confidence.is_some());
         assert_eq!(confidence.unwrap(), 0.9);
     }

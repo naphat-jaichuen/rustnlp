@@ -271,6 +271,33 @@ curl -X POST http://localhost:3000/process/diff \
   -d '{"text": "HEAD~1 HEAD"}'
 ```
 
+#### 16. Google Search
+Generates Google search URLs and commands to open them.
+
+**Task**: `google_search`
+
+**Example**:
+```bash
+curl -X POST http://localhost:3000/process/google_search \
+  -H "Content-Type: application/json" \
+  -d '{"text": "rust programming language tutorial"}'
+```
+
+**Response**:
+```json
+{
+  "command": "google_search",
+  "query": "rust programming language tutorial",
+  "google_url": "https://www.google.com/search?q=rust+programming+language+tutorial",
+  "suggested_commands": [
+    "open 'https://www.google.com/search?q=rust+programming+language+tutorial'",
+    "curl -s 'https://www.google.com/search?q=rust+programming+language+tutorial' | grep -i title",
+    "python3 -m webbrowser 'https://www.google.com/search?q=rust+programming+language+tutorial'",
+    "osascript -e \"open location \"https://www.google.com/search?q=rust+programming+language+tutorial\"\""
+  ]
+}
+```
+
 ## Response Format
 
 All successful responses follow this format:

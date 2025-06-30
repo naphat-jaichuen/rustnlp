@@ -3,6 +3,80 @@ name = "rustlm-server"
 version = "0.1.0"
 edition = "2021"
 
+# System Command Handlers
+[[bin]]
+name = "install-handler"
+path = "src/bin/install_handler.rs"
+
+[[bin]]
+name = "find-file-handler"
+path = "src/bin/find_file_handler.rs"
+
+[[bin]]
+name = "find-content-handler"
+path = "src/bin/find_content_handler.rs"
+
+[[bin]]
+name = "get-file-from-handler"
+path = "src/bin/get_file_from_handler.rs"
+
+[[bin]]
+name = "show-tools-handler"
+path = "src/bin/show_tools_handler.rs"
+
+[[bin]]
+name = "open-app-handler"
+path = "src/bin/open_app_handler.rs"
+
+[[bin]]
+name = "open-file-handler"
+path = "src/bin/open_file_handler.rs"
+
+[[bin]]
+name = "checkout-handler"
+path = "src/bin/checkout_handler.rs"
+
+[[bin]]
+name = "diff-handler"
+path = "src/bin/diff_handler.rs"
+
+[[bin]]
+name = "google-search-handler"
+path = "src/bin/google_search_handler.rs"
+
+[[bin]]
+name = "ask-ai-handler"
+path = "src/bin/ask_ai_handler.rs"
+
+# NLP Handlers
+[[bin]]
+name = "sentiment-handler"
+path = "src/bin/sentiment_handler.rs"
+
+[[bin]]
+name = "summarize-handler"
+path = "src/bin/summarize_handler.rs"
+
+[[bin]]
+name = "classify-handler"
+path = "src/bin/classify_handler.rs"
+
+[[bin]]
+name = "extract-keywords-handler"
+path = "src/bin/extract_keywords_handler.rs"
+
+[[bin]]
+name = "translate-handler"
+path = "src/bin/translate_handler.rs"
+
+[[bin]]
+name = "question-answer-handler"
+path = "src/bin/question_answer_handler.rs"
+
+[[bin]]
+name = "natural-language-handler"
+path = "src/bin/natural_language_handler.rs"
+
 [dependencies]
 axum = "0.7"
 tokio = { version = "1.0", features = ["full"] }

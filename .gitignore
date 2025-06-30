@@ -85,7 +85,8 @@ temp/
 # Eclipse
 .metadata
 .gradle
-bin/
+# Ignore Eclipse bin directory but not our Rust src/bin
+.metadata/bin/
 tmp/
 *.tmp
 *.bak

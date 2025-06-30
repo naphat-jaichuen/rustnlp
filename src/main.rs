@@ -12,6 +12,7 @@ use tracing::{info, warn};
 use uuid::Uuid;
 
 mod nlp;
+mod callbacks;
 
 use nlp::NlpProcessor;
 

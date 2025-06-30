@@ -1,10 +1,12 @@
 use anyhow::{anyhow, Result};
 use std::collections::HashMap;
 use tracing::info;
+use crate::callbacks::{CallbackManager, CommandContext};
 
 /// NLP Processor that handles various text processing tasks
 pub struct NlpProcessor {
     available_tasks: Vec<String>,
+    callback_manager: CallbackManager,
 }
 
 impl NlpProcessor {
@@ -33,20 +35,29 @@ impl NlpProcessor {
             "diff".to_string(),
             "google_search".to_string(),
             "ask_ai".to_string(),
+            "natural_language".to_string(),
         ];
 
         info!("Available NLP tasks: {:?}", available_tasks);
+        
+        // Initialize callback manager
+        let callback_manager = CallbackManager::new();
+        info!("Callback manager initialized with {} handlers", callback_manager.get_handler_info().len());
 
-        Ok(Self { available_tasks })
+        Ok(Self { 
+            available_tasks,
+            callback_manager,
+        })
     }
 
-    /// Process text with the specified task
+    /// Process text with the specified task and execute callbacks
     pub async fn process(&self, text: &str, task: &str) -> Result<(String, Option<f32>)> {
         if text.trim().is_empty() {
             return Err(anyhow!("Input text cannot be empty"));
         }
 
-        match task.to_lowercase().as_str() {
+        // Process the task
+        let (result, confidence) = match task.to_lowercase().as_str() {
             "sentiment" => self.analyze_sentiment(text).await,
             "summarize" => self.summarize_text(text).await,
             "classify" => self.classify_text(text).await,
@@ -65,7 +76,49 @@ impl NlpProcessor {
             "diff" => self.handle_diff(text).await,
             "google_search" => self.handle_google_search(text).await,
             "ask_ai" => self.handle_ask_ai(text).await,
+            "natural_language" => self.handle_natural_language(text).await,
             _ => Err(anyhow!("Unsupported task: {}", task)),
+        }?;
+
+        // Execute callbacks
+        self.execute_callbacks(text, task, &result, confidence).await;
+
+        Ok((result, confidence))
+    }
+
+    /// Execute callbacks for the processed command
+    async fn execute_callbacks(&self, text: &str, task: &str, result: &str, confidence: Option<f32>) {
+        let context = CommandContext {
+            command: task.to_string(),
+            task: task.to_string(),
+            input_text: text.to_string(),
+            parsed_result: result.to_string(),
+            confidence,
+            timestamp: chrono::Utc::now(),
+            session_id: None, // Could be added for session tracking
+        };
+
+        match self.callback_manager.execute_callback(&context).await {
+            Ok(callback_results) => {
+                for callback_result in callback_results {
+                    if callback_result.success {
+                        info!(
+                            "Callback executed successfully in {}ms: {}",
+                            callback_result.execution_time_ms,
+                            callback_result.message
+                        );
+                    } else {
+                        info!(
+                            "Callback failed in {}ms: {}",
+                            callback_result.execution_time_ms,
+                            callback_result.message
+                        );
+                    }
+                }
+            }
+            Err(e) => {
+                info!("Failed to execute callbacks: {}", e);
+            }
         }
     }
 
@@ -590,6 +643,64 @@ impl NlpProcessor {
         // If we can't parse the response, return the raw response
         Ok(format!("Raw response: {}", response))
     }
+
+    /// Handle natural language command - parses intent and entities
+    async fn handle_natural_language(&self, text: &str) -> Result<(String, Option<f32>)> {
+        info!("Processing natural language command: {}", text);
+        
+        let input = text.trim();
+        if input.is_empty() {
+            return Ok((format!("{{\"command\": \"natural_language\", \"error\": \"Input text required\", \"usage\": \"natural_language <your natural language command>\"}}"), Some(0.9)));
+        }
+        
+        // Simple intent parsing - look for common patterns
+        let input_lower = input.to_lowercase();
+        
+        let (intent, entities, confidence) = if input_lower.contains("open") && input_lower.contains("file") {
+            if input_lower.contains("svn") || input_lower.contains("repository") {
+                ("open_file_from_repo", vec![("repository_type", "svn")], 0.8)
+            } else {
+                ("open_file", vec![], 0.7)
+            }
+        } else if input_lower.contains("find") && input_lower.contains("file") {
+            ("find_file", vec![], 0.8)
+        } else if input_lower.contains("search") || input_lower.contains("find") {
+            if input_lower.contains("content") {
+                ("find_content", vec![], 0.8)
+            } else {
+                ("search", vec![], 0.7)
+            }
+        } else if input_lower.contains("install") {
+            ("install", vec![], 0.8)
+        } else if input_lower.contains("checkout") || input_lower.contains("switch branch") {
+            ("checkout", vec![], 0.8)
+        } else if input_lower.contains("diff") || input_lower.contains("compare") {
+            ("diff", vec![], 0.8)
+        } else if input_lower.contains("what") || input_lower.contains("how") || input_lower.contains("why") {
+            ("question", vec![], 0.7)
+        } else {
+            ("unknown", vec![], 0.3)
+        };
+        
+        let result = if intent == "open_file_from_repo" {
+            format!(
+                "{{\"intent\": \"{}\", \"entities\": {:?}, \"confidence\": {:.2}, \"next_action\": \"clarify_repository\", \"question\": \"Which repository would you like to open the file from? Please specify the repository name or path.\"}}",
+                intent, entities, confidence
+            )
+        } else if intent == "unknown" {
+            format!(
+                "{{\"intent\": \"{}\", \"entities\": [], \"confidence\": {:.2}, \"message\": \"I couldn't understand your request. Could you please rephrase it or use a more specific command?\", \"suggestions\": [\"open file\", \"find file\", \"search content\", \"install package\"]}}",
+                intent, confidence
+            )
+        } else {
+            format!(
+                "{{\"intent\": \"{}\", \"entities\": {:?}, \"confidence\": {:.2}, \"message\": \"Intent recognized successfully\", \"suggested_task\": \"{}\"}}",
+                intent, entities, confidence, intent
+            )
+        };
+        
+        Ok((result, Some(confidence)))
+    }
 }
 
 #[cfg(test)]
@@ -601,7 +712,7 @@ mod tests {
         let processor = NlpProcessor::new().await.unwrap();
         let tasks = processor.list_available_tasks();
         
-        assert_eq!(tasks.len(), 17);
+        assert_eq!(tasks.len(), 18);
         assert!(tasks.contains(&"sentiment".to_string()));
         assert!(tasks.contains(&"summarize".to_string()));
         assert!(tasks.contains(&"classify".to_string()));

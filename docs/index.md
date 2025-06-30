@@ -8,7 +8,7 @@ This documentation is organized into several guides, each focusing on different 
 
 ### 🚀 Getting Started
 
-- **[Main README](readme.md)** - Complete overview and quick start guide
+- **[Main README](../README.md)** - Complete overview and quick start guide
 - **[Installation Guide](installation.md)** - Detailed setup and build instructions
 - **[Usage Examples](examples.md)** - Comprehensive examples and use cases
 
@@ -71,7 +71,7 @@ echo 'Long text...' | ./target/release/summarize-handler
 
 ### For New Users
 
-1. **Start with [readme.md](readme.md)** for an overview
+1. **Start with [Main README](../README.md)** for an overview
 2. **Follow [Installation Guide](installation.md)** to set up
 3. **Explore [Usage Examples](examples.md)** for practical examples
 4. **Reference [Troubleshooting](troubleshooting.md)** if you encounter issues
@@ -142,7 +142,7 @@ The project is designed to be easily extensible. See the [Development Guide](dev
 | Task | Documentation |
 |------|---------------|
 | **Setting up the project** | [Installation Guide](installation.md) |
-| **Learning basic usage** | [readme.md](readme.md) + [Usage Examples](examples.md) |
+| **Learning basic usage** | [Main README](../README.md) + [Usage Examples](examples.md) |
 | **Integrating with other systems** | [API Reference](api-reference.md) + [Usage Examples](examples.md) |
 | **Troubleshooting problems** | [Troubleshooting](troubleshooting.md) |
 | **Extending functionality** | [Development Guide](development.md) |

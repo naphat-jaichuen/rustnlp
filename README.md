@@ -1,6 +1,14 @@
 # RustLM Server
 
-A Rust-based REST API server with Natural Language Processing capabilities.
+A comprehensive Rust-based platform providing both REST API server functionality and individual executable callback handlers for Natural Language Processing and system automation tasks.
+
+## 🚀 Two Ways to Use RustLM
+
+### 1. REST API Server Mode
+Traditional server deployment with HTTP endpoints for text processing and system automation.
+
+### 2. Individual Handler Executables ⭐ NEW!
+Standalone executable files for each callback handler, enabling microservice architecture, CLI tools, and process isolation.
 
 ## Features
 
@@ -447,6 +455,133 @@ The shared key is defined in `src/main.rs`. Both server and client must use the 
 ```rust
 let shared_key = "SECRETKEY123"; // Change this to your own key
 ```
+
+## ⭐ Individual Handler Executables
+
+In addition to the REST API server, RustLM now provides **18 individual executable files** - one for each callback handler. This enables microservice architecture, CLI tools, and process isolation.
+
+### 🚀 Quick Start with Individual Handlers
+
+#### 1. Build All Handlers
+```bash
+# Build all 18 handlers at once
+./build_handlers.sh
+```
+
+#### 2. Test All Handlers
+```bash
+# Run comprehensive tests on all handlers
+./test_handlers.sh
+```
+
+#### 3. Use Individual Handlers
+```bash
+# System handlers
+./target/release/install-handler nodejs
+./target/release/find-file-handler package.json
+./target/release/google-search-handler 'rust programming'
+
+# NLP handlers
+./target/release/sentiment-handler 'I love this product!'
+echo 'Long text to summarize...' | ./target/release/summarize-handler
+./target/release/classify-handler 'Technical documentation about Rust'
+
+# With custom configuration
+PARSED_RESULT='{"sentiment": "positive", "score": 0.95}' \
+  ./target/release/sentiment-handler 'This is amazing!'
+```
+
+### 📁 Available Individual Handlers
+
+#### System Command Handlers (11 executables)
+- `install-handler` - Software installation commands
+- `find-file-handler` - File system search
+- `find-content-handler` - Content search within files
+- `get-file-from-handler` - File download/retrieval
+- `show-tools-handler` - Tool listing
+- `open-app-handler` - Application launching
+- `open-file-handler` - File opening
+- `checkout-handler` - Git checkout operations
+- `diff-handler` - File/Git diff operations
+- `google-search-handler` - Web search
+- `ask-ai-handler` - AI query processing
+
+#### NLP Handlers (7 executables)
+- `sentiment-handler` - Text sentiment analysis
+- `summarize-handler` - Text summarization
+- `classify-handler` - Text classification
+- `extract-keywords-handler` - Keyword extraction
+- `translate-handler` - Text translation
+- `question-answer-handler` - Q&A processing
+- `natural-language-handler` - General NLP
+
+### 🔌 Input Methods
+
+#### 1. Command Line Arguments
+```bash
+./target/release/sentiment-handler 'I love this product!'
+./target/release/install-handler nodejs
+```
+
+**Note**: Use single quotes (`'`) instead of double quotes (`"`) to avoid zsh parsing errors.
+
+#### 2. Standard Input
+```bash
+echo 'Text to analyze' | ./target/release/sentiment-handler
+cat document.txt | ./target/release/summarize-handler
+```
+
+#### 3. Environment Variables
+```bash
+# Custom parsed results
+PARSED_RESULT='{"sentiment": "positive", "score": 0.95}' \
+  ./target/release/sentiment-handler 'This is great!'
+
+# Debug logging
+RUST_LOG=debug ./target/release/sentiment-handler 'test'
+```
+
+### 📊 Output Format
+
+All handlers return JSON with this structure:
+```json
+{
+  "success": true,
+  "message": "Handler completed successfully",
+  "data": {
+    "action": "specific_action",
+    "result": "handler_specific_data"
+  },
+  "execution_time_ms": 42
+}
+```
+
+### 🏢 Architecture Benefits
+
+- **Microservice Ready**: Each handler as independent service
+- **Process Isolation**: Separate memory spaces and fault isolation
+- **Selective Deployment**: Deploy only needed functionality
+- **CLI Tools**: Use handlers in shell scripts and automation
+- **Integration Friendly**: Easy to embed in existing systems
+
+### 📈 Use Cases
+
+- **Shell Scripts**: Automate text processing workflows
+- **CI/CD Pipelines**: Integrate specific handlers in build processes
+- **Microservices**: Deploy handlers as separate containerized services
+- **Development Tools**: Create custom CLI utilities
+- **System Administration**: Automate system tasks
+
+### 📆 Complete Documentation
+
+For comprehensive documentation on individual handlers:
+
+- **[Documentation Hub](docs/index.md)** - Complete navigation and overview
+- **[Installation Guide](docs/installation.md)** - Detailed setup instructions
+- **[Usage Examples](docs/examples.md)** - Real-world usage scenarios
+- **[API Reference](docs/api-reference.md)** - Complete technical specifications
+- **[Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions
+- **[Development Guide](docs/development.md)** - How to extend and modify
 
 ## Configuration
 

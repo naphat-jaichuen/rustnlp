@@ -91,9 +91,11 @@ Response:
 }
 ```
 
-## Available NLP Tasks
+## Available Tasks
 
-### 1. Sentiment Analysis
+### 🧠 NLP Tasks
+
+#### 1. Sentiment Analysis
 Analyzes the emotional tone of text.
 
 **Task**: `sentiment`
@@ -117,53 +119,157 @@ curl -X POST http://localhost:3000/process/sentiment \
 }
 ```
 
-### 2. Text Summarization
+#### 2. Text Summarization
 Creates a concise summary of longer text.
 
 **Task**: `summarize`
 
-**Example**:
-```bash
-curl -X POST http://localhost:3000/process/summarize \
-  -H "Content-Type: application/json" \
-  -d '{"text": "This is a long article about artificial intelligence. AI is transforming many industries. The future looks bright for AI applications."}'
-```
-
-### 3. Text Classification
+#### 3. Text Classification
 Categorizes text into predefined categories.
 
 **Task**: `classify`
-
 **Categories**: technology, business, sports, health, entertainment, general
 
-**Example**:
-```bash
-curl -X POST http://localhost:3000/process/classify \
-  -H "Content-Type: application/json" \
-  -d '{"text": "The new iPhone features advanced AI chips and machine learning capabilities."}'
-```
-
-### 4. Keyword Extraction
+#### 4. Keyword Extraction
 Extracts the most important keywords from text.
 
 **Task**: `extract_keywords`
 
-**Example**:
-```bash
-curl -X POST http://localhost:3000/process/extract_keywords \
-  -H "Content-Type: application/json" \
-  -d '{"text": "Machine learning and artificial intelligence are revolutionizing technology and business applications worldwide."}'
-```
-
-### 5. Translation (Mock)
+#### 5. Translation (Mock)
 Placeholder for translation functionality.
 
 **Task**: `translate`
 
-### 6. Question Answering (Mock)
+#### 6. Question Answering (Mock)
 Placeholder for question answering functionality.
 
 **Task**: `question_answer`
+
+### 🛠️ System Command Tasks
+
+#### 7. Install Packages
+Provides installation commands for various package managers.
+
+**Task**: `install`
+
+**Example**:
+```bash
+curl -X POST http://localhost:3000/process/install \
+  -H "Content-Type: application/json" \
+  -d '{"text": "nodejs"}'
+```
+
+**Response**:
+```json
+{
+  "command": "install",
+  "package": "nodejs",
+  "suggested_commands": [
+    "brew install nodejs",
+    "npm install nodejs",
+    "cargo install nodejs",
+    "pip install nodejs"
+  ]
+}
+```
+
+#### 8. Find Files
+Provides commands to find files by name.
+
+**Task**: `find_file`
+
+**Example**:
+```bash
+curl -X POST http://localhost:3000/process/find_file \
+  -H "Content-Type: application/json" \
+  -d '{"text": "main.rs"}'
+```
+
+#### 9. Find Content
+Provides commands to search for content within files.
+
+**Task**: `find_content`
+
+**Example**:
+```bash
+curl -X POST http://localhost:3000/process/find_content \
+  -H "Content-Type: application/json" \
+  -d '{"text": "TODO"}'
+```
+
+#### 10. Get File From Source
+Provides commands to download or copy files.
+
+**Task**: `get_file_from`
+
+**Example**:
+```bash
+curl -X POST http://localhost:3000/process/get_file_from \
+  -H "Content-Type: application/json" \
+  -d '{"text": "https://example.com/file.txt"}'
+```
+
+#### 11. Show Tools
+Lists available development tools by category.
+
+**Task**: `show_tools`
+
+**Categories**: development, system, file_management, network, text_editors
+
+**Example**:
+```bash
+curl -X POST http://localhost:3000/process/show_tools \
+  -H "Content-Type: application/json" \
+  -d '{"text": "development"}'
+```
+
+#### 12. Open Applications
+Provides commands to open macOS applications.
+
+**Task**: `open_app`
+
+**Example**:
+```bash
+curl -X POST http://localhost:3000/process/open_app \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Visual Studio Code"}'
+```
+
+#### 13. Open Files
+Provides commands to open files with various applications.
+
+**Task**: `open_file`
+
+**Example**:
+```bash
+curl -X POST http://localhost:3000/process/open_file \
+  -H "Content-Type: application/json" \
+  -d '{"text": "/path/to/file.txt"}'
+```
+
+#### 14. Git Checkout
+Provides git checkout commands for branches and commits.
+
+**Task**: `checkout`
+
+**Example**:
+```bash
+curl -X POST http://localhost:3000/process/checkout \
+  -H "Content-Type: application/json" \
+  -d '{"text": "feature-branch"}'
+```
+
+#### 15. Git Diff
+Provides git diff commands for comparing files and commits.
+
+**Task**: `diff`
+
+**Example**:
+```bash
+curl -X POST http://localhost:3000/process/diff \
+  -H "Content-Type: application/json" \
+  -d '{"text": "HEAD~1 HEAD"}'
+```
 
 ## Response Format
 

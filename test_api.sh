@@ -91,7 +91,63 @@ curl -s -X POST "$BASE_URL/process/sentiment" \
   -d '{"text": ""}' | jq '.'
 echo -e "\n"
 
+# Test System Commands
+echo "13. Testing Install Command..."
+curl -s -X POST "$BASE_URL/process/install" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "nodejs"}' | jq '.'
+echo -e "\n"
+
+echo "14. Testing Find File Command..."
+curl -s -X POST "$BASE_URL/process/find_file" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "main.rs"}' | jq '.'
+echo -e "\n"
+
+echo "15. Testing Find Content Command..."
+curl -s -X POST "$BASE_URL/process/find_content" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "TODO"}' | jq '.'
+echo -e "\n"
+
+echo "16. Testing Get File From Command..."
+curl -s -X POST "$BASE_URL/process/get_file_from" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "https://example.com/file.txt"}' | jq '.'
+echo -e "\n"
+
+echo "17. Testing Show Tools Command..."
+curl -s -X POST "$BASE_URL/process/show_tools" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "development"}' | jq '.'
+echo -e "\n"
+
+echo "18. Testing Open App Command..."
+curl -s -X POST "$BASE_URL/process/open_app" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Visual Studio Code"}' | jq '.'
+echo -e "\n"
+
+echo "19. Testing Open File Command..."
+curl -s -X POST "$BASE_URL/process/open_file" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "/path/to/file.txt"}' | jq '.'
+echo -e "\n"
+
+echo "20. Testing Checkout Command..."
+curl -s -X POST "$BASE_URL/process/checkout" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "feature-branch"}' | jq '.'
+echo -e "\n"
+
+echo "21. Testing Diff Command..."
+curl -s -X POST "$BASE_URL/process/diff" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "HEAD~1 HEAD"}' | jq '.'
+echo -e "\n"
+
 echo "✅ API Testing Complete!"
+echo "📋 Total Tests: 21 (12 original + 9 system commands)"
 
 # Kill server if started in background
 # if [ ! -z "$SERVER_PID" ]; then

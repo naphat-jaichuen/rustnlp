@@ -21,6 +21,16 @@ impl NlpProcessor {
             "extract_keywords".to_string(),
             "translate".to_string(),
             "question_answer".to_string(),
+            // System command tasks
+            "install".to_string(),
+            "find_file".to_string(),
+            "find_content".to_string(),
+            "get_file_from".to_string(),
+            "show_tools".to_string(),
+            "open_app".to_string(),
+            "open_file".to_string(),
+            "checkout".to_string(),
+            "diff".to_string(),
         ];
 
         info!("Available NLP tasks: {:?}", available_tasks);
@@ -41,6 +51,16 @@ impl NlpProcessor {
             "extract_keywords" => self.extract_keywords(text).await,
             "translate" => self.translate_text(text).await,
             "question_answer" => self.answer_question(text).await,
+            // System command tasks
+            "install" => self.handle_install(text).await,
+            "find_file" => self.handle_find_file(text).await,
+            "find_content" => self.handle_find_content(text).await,
+            "get_file_from" => self.handle_get_file_from(text).await,
+            "show_tools" => self.handle_show_tools(text).await,
+            "open_app" => self.handle_open_app(text).await,
+            "open_file" => self.handle_open_file(text).await,
+            "checkout" => self.handle_checkout(text).await,
+            "diff" => self.handle_diff(text).await,
             _ => Err(anyhow!("Unsupported task: {}", task)),
         }
     }
@@ -230,6 +250,216 @@ impl NlpProcessor {
 
         Ok((result, Some(0.3))) // Low confidence for mock
     }
+
+    // === System Command Handlers ===
+
+    /// Handle install command
+    async fn handle_install(&self, text: &str) -> Result<(String, Option<f32>)> {
+        info!("Processing install command: {}", text);
+        
+        let package = text.trim();
+        if package.is_empty() {
+            return Ok((format!("{{\"command\": \"install\", \"error\": \"Package name required\", \"usage\": \"install <package_name>\"}}"), Some(0.9)));
+        }
+        
+        let result = format!(
+            "{{\"command\": \"install\", \"package\": \"{}\", \"suggested_commands\": [\"brew install {}\", \"npm install {}\", \"cargo install {}\", \"pip install {}\"]}}",
+            package, package, package, package, package
+        );
+        
+        Ok((result, Some(0.9)))
+    }
+
+    /// Handle find file command
+    async fn handle_find_file(&self, text: &str) -> Result<(String, Option<f32>)> {
+        info!("Processing find file command: {}", text);
+        
+        let filename = text.trim();
+        if filename.is_empty() {
+            return Ok((format!("{{\"command\": \"find_file\", \"error\": \"Filename required\", \"usage\": \"find_file <filename>\"}}"), Some(0.9)));
+        }
+        
+        let result = format!(
+            "{{\"command\": \"find_file\", \"filename\": \"{}\", \"suggested_commands\": [\"find . -name '{}'\", \"find . -iname '{}'\", \"locate {}\", \"fd {}\"]}}",
+            filename, filename, filename, filename, filename
+        );
+        
+        Ok((result, Some(0.9)))
+    }
+
+    /// Handle find content command
+    async fn handle_find_content(&self, text: &str) -> Result<(String, Option<f32>)> {
+        info!("Processing find content command: {}", text);
+        
+        let search_term = text.trim();
+        if search_term.is_empty() {
+            return Ok((format!("{{\"command\": \"find_content\", \"error\": \"Search term required\", \"usage\": \"find_content <search_term>\"}}"), Some(0.9)));
+        }
+        
+        let result = format!(
+            "{{\"command\": \"find_content\", \"search_term\": \"{}\", \"suggested_commands\": [\"grep -r '{}' .\", \"rg '{}'\", \"ag '{}'\", \"find . -type f -exec grep -l '{}' {{}} \\;\"]}}",
+            search_term, search_term, search_term, search_term, search_term
+        );
+        
+        Ok((result, Some(0.9)))
+    }
+
+    /// Handle get file from command
+    async fn handle_get_file_from(&self, text: &str) -> Result<(String, Option<f32>)> {
+        info!("Processing get file from command: {}", text);
+        
+        let source = text.trim();
+        if source.is_empty() {
+            return Ok((format!("{{\"command\": \"get_file_from\", \"error\": \"Source required\", \"usage\": \"get_file_from <url_or_path>\"}}"), Some(0.9)));
+        }
+        
+        let suggested_commands = if source.starts_with("http") {
+            vec![
+                format!("curl -O {}", source),
+                format!("wget {}", source),
+                format!("curl -L {} -o filename", source),
+            ]
+        } else {
+            vec![
+                format!("cp {} .", source),
+                format!("rsync -av {} .", source),
+                format!("scp {} .", source),
+            ]
+        };
+        
+        let result = format!(
+            "{{\"command\": \"get_file_from\", \"source\": \"{}\", \"suggested_commands\": {:?}}}",
+            source, suggested_commands
+        );
+        
+        Ok((result, Some(0.9)))
+    }
+
+    /// Handle show tools command
+    async fn handle_show_tools(&self, text: &str) -> Result<(String, Option<f32>)> {
+        info!("Processing show tools command: {}", text);
+        
+        let category = text.trim().to_lowercase();
+        
+        let tools = if category.is_empty() || category == "all" {
+            serde_json::json!({
+                "development": ["git", "cargo", "npm", "yarn", "docker", "kubectl"],
+                "system": ["brew", "apt", "yum", "systemctl", "ps", "top", "htop"],
+                "file_management": ["ls", "find", "grep", "sed", "awk", "rsync", "tar"],
+                "network": ["curl", "wget", "ssh", "scp", "ping", "netstat"],
+                "text_editors": ["vim", "nano", "code", "emacs", "sublime"]
+            })
+        } else {
+            match category.as_str() {
+                "dev" | "development" => serde_json::json!(["git", "cargo", "npm", "yarn", "docker", "kubectl"]),
+                "system" => serde_json::json!(["brew", "apt", "yum", "systemctl", "ps", "top", "htop"]),
+                "file" | "files" => serde_json::json!(["ls", "find", "grep", "sed", "awk", "rsync", "tar"]),
+                "network" => serde_json::json!(["curl", "wget", "ssh", "scp", "ping", "netstat"]),
+                "editor" | "editors" => serde_json::json!(["vim", "nano", "code", "emacs", "sublime"]),
+                _ => serde_json::json!({"error": "Unknown category", "available_categories": ["development", "system", "file_management", "network", "text_editors"]})
+            }
+        };
+        
+        let result = format!(
+            "{{\"command\": \"show_tools\", \"category\": \"{}\", \"tools\": {}}}",
+            if category.is_empty() { "all" } else { &category },
+            tools
+        );
+        
+        Ok((result, Some(0.9)))
+    }
+
+    /// Handle open app command
+    async fn handle_open_app(&self, text: &str) -> Result<(String, Option<f32>)> {
+        info!("Processing open app command: {}", text);
+        
+        let app_name = text.trim();
+        if app_name.is_empty() {
+            return Ok((format!("{{\"command\": \"open_app\", \"error\": \"App name required\", \"usage\": \"open_app <app_name>\"}}"), Some(0.9)));
+        }
+        
+        let result = format!(
+            "{{\"command\": \"open_app\", \"app_name\": \"{}\", \"suggested_commands\": [\"open -a '{}'\", \"open /Applications/{}.app\", \"osascript -e 'tell application \\\"{}\\\" to activate'\"]}}",
+            app_name, app_name, app_name, app_name
+        );
+        
+        Ok((result, Some(0.9)))
+    }
+
+    /// Handle open file command
+    async fn handle_open_file(&self, text: &str) -> Result<(String, Option<f32>)> {
+        info!("Processing open file command: {}", text);
+        
+        let file_path = text.trim();
+        if file_path.is_empty() {
+            return Ok((format!("{{\"command\": \"open_file\", \"error\": \"File path required\", \"usage\": \"open_file <file_path>\"}}"), Some(0.9)));
+        }
+        
+        let result = format!(
+            "{{\"command\": \"open_file\", \"file_path\": \"{}\", \"suggested_commands\": [\"open '{}'\", \"code '{}'\", \"vim '{}'\", \"cat '{}'\"]}}",
+            file_path, file_path, file_path, file_path, file_path
+        );
+        
+        Ok((result, Some(0.9)))
+    }
+
+    /// Handle checkout command (Git)
+    async fn handle_checkout(&self, text: &str) -> Result<(String, Option<f32>)> {
+        info!("Processing checkout command: {}", text);
+        
+        let branch_or_commit = text.trim();
+        if branch_or_commit.is_empty() {
+            return Ok((format!("{{\"command\": \"checkout\", \"error\": \"Branch or commit required\", \"usage\": \"checkout <branch_or_commit>\"}}"), Some(0.9)));
+        }
+        
+        let result = format!(
+            "{{\"command\": \"checkout\", \"target\": \"{}\", \"suggested_commands\": [\"git checkout {}\", \"git checkout -b {}\", \"git switch {}\", \"git switch -c {}\"]}}",
+            branch_or_commit, branch_or_commit, branch_or_commit, branch_or_commit, branch_or_commit
+        );
+        
+        Ok((result, Some(0.9)))
+    }
+
+    /// Handle diff command
+    async fn handle_diff(&self, text: &str) -> Result<(String, Option<f32>)> {
+        info!("Processing diff command: {}", text);
+        
+        let files_or_commits = text.trim();
+        
+        let suggested_commands = if files_or_commits.is_empty() {
+            vec![
+                "git diff".to_string(),
+                "git diff --staged".to_string(),
+                "git diff HEAD~1".to_string(),
+                "git status".to_string(),
+            ]
+        } else if files_or_commits.contains(' ') {
+            // Likely two files or commits
+            let parts: Vec<&str> = files_or_commits.split_whitespace().collect();
+            if parts.len() >= 2 {
+                vec![
+                    format!("diff {} {}", parts[0], parts[1]),
+                    format!("git diff {} {}", parts[0], parts[1]),
+                    format!("code --diff {} {}", parts[0], parts[1]),
+                ]
+            } else {
+                vec![format!("git diff {}", files_or_commits)]
+            }
+        } else {
+            vec![
+                format!("git diff {}", files_or_commits),
+                format!("git diff HEAD {}", files_or_commits),
+                format!("git show {}", files_or_commits),
+            ]
+        };
+        
+        let result = format!(
+            "{{\"command\": \"diff\", \"target\": \"{}\", \"suggested_commands\": {:?}}}",
+            files_or_commits, suggested_commands
+        );
+        
+        Ok((result, Some(0.9)))
+    }
 }
 
 #[cfg(test)]
@@ -241,7 +471,7 @@ mod tests {
         let processor = NlpProcessor::new().await.unwrap();
         let tasks = processor.list_available_tasks();
         
-        assert_eq!(tasks.len(), 6);
+        assert_eq!(tasks.len(), 15);
         assert!(tasks.contains(&"sentiment".to_string()));
         assert!(tasks.contains(&"summarize".to_string()));
         assert!(tasks.contains(&"classify".to_string()));
@@ -397,5 +627,96 @@ mod tests {
             let result = processor.process("test text for processing", &task).await;
             assert!(result.is_ok(), "Task {} should work", task);
         }
+    }
+
+    // === System Command Tests ===
+
+    #[tokio::test]
+    async fn test_install_command() {
+        let processor = NlpProcessor::new().await.unwrap();
+        let (result, confidence) = processor
+            .handle_install("rust")
+            .await
+            .unwrap();
+        
+        assert!(result.contains("install"));
+        assert!(result.contains("rust"));
+        assert!(result.contains("brew install rust"));
+        assert!(confidence.is_some());
+        assert_eq!(confidence.unwrap(), 0.9);
+    }
+
+    #[tokio::test]
+    async fn test_find_file_command() {
+        let processor = NlpProcessor::new().await.unwrap();
+        let (result, confidence) = processor
+            .handle_find_file("main.rs")
+            .await
+            .unwrap();
+        
+        assert!(result.contains("find_file"));
+        assert!(result.contains("main.rs"));
+        assert!(result.contains("find . -name"));
+        assert!(confidence.is_some());
+        assert_eq!(confidence.unwrap(), 0.9);
+    }
+
+    #[tokio::test]
+    async fn test_find_content_command() {
+        let processor = NlpProcessor::new().await.unwrap();
+        let (result, confidence) = processor
+            .handle_find_content("TODO")
+            .await
+            .unwrap();
+        
+        assert!(result.contains("find_content"));
+        assert!(result.contains("TODO"));
+        assert!(result.contains("grep -r"));
+        assert!(confidence.is_some());
+        assert_eq!(confidence.unwrap(), 0.9);
+    }
+
+    #[tokio::test]
+    async fn test_show_tools_command() {
+        let processor = NlpProcessor::new().await.unwrap();
+        let (result, confidence) = processor
+            .handle_show_tools("development")
+            .await
+            .unwrap();
+        
+        assert!(result.contains("show_tools"));
+        assert!(result.contains("git"));
+        assert!(result.contains("cargo"));
+        assert!(confidence.is_some());
+        assert_eq!(confidence.unwrap(), 0.9);
+    }
+
+    #[tokio::test]
+    async fn test_checkout_command() {
+        let processor = NlpProcessor::new().await.unwrap();
+        let (result, confidence) = processor
+            .handle_checkout("main")
+            .await
+            .unwrap();
+        
+        assert!(result.contains("checkout"));
+        assert!(result.contains("main"));
+        assert!(result.contains("git checkout"));
+        assert!(confidence.is_some());
+        assert_eq!(confidence.unwrap(), 0.9);
+    }
+
+    #[tokio::test]
+    async fn test_diff_command() {
+        let processor = NlpProcessor::new().await.unwrap();
+        let (result, confidence) = processor
+            .handle_diff("")
+            .await
+            .unwrap();
+        
+        assert!(result.contains("diff"));
+        assert!(result.contains("git diff"));
+        assert!(confidence.is_some());
+        assert_eq!(confidence.unwrap(), 0.9);
     }
 }
